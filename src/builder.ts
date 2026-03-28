@@ -2,8 +2,7 @@ import * as THREE from 'three';
 import type { ElementBlock } from './types';
 
 const SCALE = 0.1;
-const DEPTH_HEIGHT = 0.8;
-const BOUNDARY_LIFT = 0.12;
+const MAX_ELEVATION = 6;
 const MIN_HEIGHT = 0.08;
 const SIDE_DARKEN = 0.65;
 const EDGE_OPACITY = 0.1;
@@ -33,13 +32,27 @@ export function buildCity(
     depthWrite: false,
   });
 
+  const maxDepth = blocks.reduce((m, b) => Math.max(m, b.depth), 1);
+  const depthScale = MAX_ELEVATION / maxDepth;
+  const boundaryLift = 0.2 * depthScale;
+  const pageWidthPx = pw / ss;
+
   for (const block of blocks) {
-    const w3d = block.width * SCALE;
-    const h3d = block.height * SCALE;
+    const inset = block.depth * 0.15;
+    const bx = block.x + inset;
+    const by = block.y + inset;
+    const bw = block.width - inset * 2;
+    const bh = block.height - inset * 2;
+    if (bw < 1 || bh < 1) continue;
+
+    const w3d = bw * SCALE;
+    const h3d = bh * SCALE;
     if (w3d < 0.04 || h3d < 0.04) continue;
 
+    const widthRatio = block.width / pageWidthPx;
+    const dampen = 1 - widthRatio * 0.85;
     const elevation = Math.max(
-      block.depth * DEPTH_HEIGHT + (block.hasBoundary ? BOUNDARY_LIFT : 0),
+      (block.depth * depthScale + (block.hasBoundary ? boundaryLift : 0)) * dampen,
       MIN_HEIGHT,
     );
 
@@ -92,9 +105,9 @@ export function buildCity(
     }
 
     mesh.position.set(
-      block.x * SCALE + w3d * 0.5,
+      bx * SCALE + w3d * 0.5,
       elevation * 0.5,
-      block.y * SCALE + h3d * 0.5,
+      by * SCALE + h3d * 0.5,
     );
     mesh.castShadow = block.hasBoundary;
     mesh.receiveShadow = true;

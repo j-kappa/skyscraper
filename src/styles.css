@@ -62,7 +62,7 @@ html, body {
   padding: 0 24px;
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 20px;
 }
 
 .landing-header {
@@ -214,8 +214,13 @@ html, body {
 }
 
 .credit {
+  position: absolute;
+  bottom: 24px;
+  left: 0;
+  right: 0;
+  text-align: center;
   font-family: var(--mono);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   color: var(--text-tertiary);
   opacity: 0.6;
 }
@@ -228,6 +233,10 @@ html, body {
 
 .credit a:hover {
   color: var(--text);
+}
+
+.credit .footer-sep {
+  margin: 0 2px;
 }
 
 /* ---- Scene ---- */

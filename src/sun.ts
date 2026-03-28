@@ -10,16 +10,16 @@ export function createFixedLight(
   sceneW: number,
   sceneH: number,
 ): THREE.DirectionalLight {
-  const dir = new THREE.DirectionalLight(0xffffff, 0.55);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.45);
   dir.castShadow = true;
 
-  dir.shadow.mapSize.width = 2048;
-  dir.shadow.mapSize.height = 2048;
+  dir.shadow.mapSize.width = 4096;
+  dir.shadow.mapSize.height = 4096;
   dir.shadow.camera.near = 1;
   dir.shadow.camera.far = 2000;
-  dir.shadow.bias = -0.0005;
+  dir.shadow.bias = -0.0003;
   dir.shadow.normalBias = 0.02;
-  dir.shadow.radius = 3;
+  dir.shadow.radius = 6;
 
   const x = SUN_DISTANCE * Math.cos(ALTITUDE) * Math.sin(AZIMUTH);
   const y = SUN_DISTANCE * Math.sin(ALTITUDE);

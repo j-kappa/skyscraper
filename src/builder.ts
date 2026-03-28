@@ -77,7 +77,7 @@ export function buildCity(
     }
 
     const depthBias = -(block.depth + (isMedia ? 10 : 0)) * 0.5;
-    const topMat = new THREE.MeshBasicMaterial({
+    const topMat = new THREE.MeshLambertMaterial({
       map: topTexture,
       polygonOffset: true,
       polygonOffsetFactor: depthBias,
@@ -115,7 +115,7 @@ export function buildCity(
       elevation * 0.5,
       block.y * SCALE + h3d * 0.5,
     );
-    mesh.castShadow = block.hasBoundary;
+    mesh.castShadow = elevation > 0.2;
     mesh.receiveShadow = true;
     mesh.renderOrder = block.depth + (isMedia ? 100 : 0);
     group.add(mesh);

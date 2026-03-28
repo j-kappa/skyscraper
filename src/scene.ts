@@ -64,11 +64,10 @@ export function createScene(
   controls.maxDistance = viewHeight * 3;
   controls.update();
 
-  // Lighting — neutral white to preserve screenshot colors
-  const ambient = new THREE.AmbientLight(0xffffff, 0.55);
+  const ambient = new THREE.AmbientLight(0xffffff, 0.45);
   scene.add(ambient);
 
-  const hemiLight = new THREE.HemisphereLight(0xffffff, 0xcccccc, 0.15);
+  const hemiLight = new THREE.HemisphereLight(0xffffff, 0xcccccc, 0.1);
   scene.add(hemiLight);
 
   const sunLight = createFixedLight(sceneW, sceneH);
@@ -83,7 +82,7 @@ export function createScene(
   groundTexture.colorSpace = THREE.SRGBColorSpace;
 
   const groundGeo = new THREE.PlaneGeometry(sceneW, sceneH);
-  const groundMat = new THREE.MeshBasicMaterial({
+  const groundMat = new THREE.MeshLambertMaterial({
     map: groundTexture,
   });
   const ground = new THREE.Mesh(groundGeo, groundMat);

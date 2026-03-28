@@ -8,7 +8,10 @@ const MAX_DEPTH = 12;
 const MIN_SIZE = 8;
 const OVERLAP_THRESHOLD = 0.92;
 
-const CORS_PROXY = 'https://corsproxy.io/?';
+const CORS_PROXIES = [
+  (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+];
 
 const SKIP_TAGS = new Set([
   'SCRIPT', 'STYLE', 'NOSCRIPT', 'META', 'LINK', 'HEAD', 'TITLE', 'BR', 'HR',
@@ -105,7 +108,6 @@ export async function parseHTML(
     foreignObjectRendering: false,
     imageTimeout: 15000,
     removeContainer: true,
-    proxy: CORS_PROXY,
   });
 
   onStatus?.('Extracting elements\u2026');
@@ -138,10 +140,8 @@ async function inlineAllStylesheets(doc: Document, baseUrl: string) {
     href = resolveUrl(href, baseUrl);
 
     try {
-      const proxyUrl = CORS_PROXY + encodeURIComponent(href);
-      const res = await fetch(proxyUrl);
-      if (!res.ok) return;
-      let cssText = await res.text();
+      let cssText = await fetchText(href);
+      if (!cssText) return;
 
       cssText = cssText.replace(/url\(\s*['"]?([^'"()]+)['"]?\s*\)/gi, (match, url) => {
         if (url.startsWith('data:')) return match;
@@ -170,13 +170,27 @@ async function inlineAllStylesheets(doc: Document, baseUrl: string) {
   }
 }
 
-// ─── Image inlining: fetch via proxy → blob → data URL ───
+// ─── Proxy helpers ───
+
+async function fetchViaProxy(url: string): Promise<Response | null> {
+  for (const makeUrl of CORS_PROXIES) {
+    try {
+      const res = await fetch(makeUrl(url));
+      if (res.ok) return res;
+    } catch { /* try next */ }
+  }
+  return null;
+}
+
+async function fetchText(url: string): Promise<string | null> {
+  const res = await fetchViaProxy(url);
+  return res ? res.text() : null;
+}
 
 async function fetchAsDataUrl(url: string): Promise<string | null> {
-  const proxyUrl = CORS_PROXY + encodeURIComponent(url);
+  const res = await fetchViaProxy(url);
+  if (!res) return null;
   try {
-    const res = await fetch(proxyUrl);
-    if (!res.ok) return null;
     const blob = await res.blob();
     return await blobToDataUrl(blob);
   } catch {

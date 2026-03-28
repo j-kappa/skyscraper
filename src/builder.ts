@@ -36,7 +36,7 @@ export function buildCity(
 
   const maxDepth = blocks.reduce((m, b) => Math.max(m, b.depth), 1);
   const depthScale = MAX_ELEVATION / maxDepth;
-  const boundaryLift = 0.2 * depthScale;
+  const boundaryLift = 0.4;
   const pageWidthPx = pw / ss;
 
   for (const block of blocks) {
@@ -45,12 +45,12 @@ export function buildCity(
     if (w3d < 0.04 || h3d < 0.04) continue;
 
     const widthRatio = block.width / pageWidthPx;
-    const dampen = 1 - widthRatio * 0.7;
+    const dampen = 1 - Math.pow(widthRatio, 1.5) * 0.85;
     const isMedia = MEDIA_TAGS.has(block.tagName);
     const elevation = Math.max(
       (block.depth * depthScale + (block.hasBoundary ? boundaryLift : 0)) * dampen
         + (isMedia ? MEDIA_LIFT : 0),
-      MIN_HEIGHT,
+      block.hasBoundary ? 0.3 : MIN_HEIGHT,
     );
 
     const cropX = Math.round(block.x * ss);

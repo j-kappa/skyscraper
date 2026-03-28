@@ -95,20 +95,31 @@ export async function parseHTML(
   const pageWidth = VIEWPORT_W;
   const pageHeight = Math.min(scrollH, VIEWPORT_H * 3);
 
-  const screenshot = await html2canvas(doc.documentElement, {
-    width: pageWidth,
-    height: pageHeight,
-    windowWidth: VIEWPORT_W,
-    windowHeight: pageHeight,
-    scale: 2,
-    useCORS: true,
-    allowTaint: true,
-    logging: false,
-    backgroundColor: '#ffffff',
-    foreignObjectRendering: false,
-    imageTimeout: 15000,
-    removeContainer: true,
-  });
+  const origError = console.error;
+  console.error = (...args: unknown[]) => {
+    if (typeof args[0] === 'string' && args[0].includes('unsupported color function')) return;
+    origError.apply(console, args);
+  };
+
+  let screenshot: HTMLCanvasElement;
+  try {
+    screenshot = await html2canvas(doc.documentElement, {
+      width: pageWidth,
+      height: pageHeight,
+      windowWidth: VIEWPORT_W,
+      windowHeight: pageHeight,
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+      foreignObjectRendering: false,
+      imageTimeout: 15000,
+      removeContainer: true,
+    });
+  } finally {
+    console.error = origError;
+  }
 
   onStatus?.('Extracting elements\u2026');
 

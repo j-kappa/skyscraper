@@ -18,6 +18,58 @@ const loadingText = document.getElementById('loading-text')!;
 const backBtn = document.getElementById('back-btn')!;
 const urlLabel = document.getElementById('url-label')!;
 let ctx: SceneContext | null = null;
+let statusInterval: ReturnType<typeof setInterval> | null = null;
+
+const STATUS_PHASES: Record<string, string[]> = {
+  fetch: [
+    'Surveying the site\u2026',
+    'Scouting the location\u2026',
+    'Pulling permits\u2026',
+    'Reading blueprints\u2026',
+    'Reviewing the plans\u2026',
+  ],
+  render: [
+    'Pouring the foundation\u2026',
+    'Laying the groundwork\u2026',
+    'Setting up scaffolding\u2026',
+    'Mixing the concrete\u2026',
+  ],
+  styles: [
+    'Choosing the paint colours\u2026',
+    'Picking the cladding\u2026',
+    'Sourcing materials\u2026',
+    'Selecting finishes\u2026',
+  ],
+  images: [
+    'Hanging the signage\u2026',
+    'Installing the windows\u2026',
+    'Mounting the billboards\u2026',
+    'Framing the artwork\u2026',
+  ],
+  prepare: [
+    'Inspecting the wiring\u2026',
+    'Checking the plumbing\u2026',
+    'Running final inspections\u2026',
+    'Tightening the bolts\u2026',
+  ],
+  screenshot: [
+    'Photographing the skyline\u2026',
+    'Taking aerial shots\u2026',
+    'Capturing the view\u2026',
+    'Snapping the panorama\u2026',
+  ],
+  build: [
+    'Raising the steel\u2026',
+    'Stacking the floors\u2026',
+    'Craning in the beams\u2026',
+    'Erecting the towers\u2026',
+    'Assembling the skyline\u2026',
+  ],
+};
+
+function pickRandom(arr: string[]): string {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
 
 urlInput.addEventListener('focus', () => {
   if (urlInput.value.length > 0) urlInput.select();
@@ -62,21 +114,29 @@ backBtn.addEventListener('click', () => {
 
 async function loadSite(url: string) {
   showScene();
-  setLoading(true, 'Fetching site\u2026');
+  setLoading(true, pickRandom(STATUS_PHASES.fetch), 'fetch');
 
   const html = await fetchHTML(url);
 
   const { blocks, screenshot, pageWidth, pageHeight, screenshotScale } = await parseHTML(
     html,
     url,
-    (msg) => setLoading(true, msg),
+    (msg) => {
+      const phase = msg.includes('Rendering') ? 'render'
+        : msg.includes('styles') ? 'styles'
+        : msg.includes('images') ? 'images'
+        : msg.includes('Preparing') ? 'prepare'
+        : msg.includes('screenshot') ? 'screenshot'
+        : 'render';
+      setLoading(true, pickRandom(STATUS_PHASES[phase]), phase);
+    },
   );
 
   if (blocks.length === 0) {
     throw new Error('No visible elements found on that page.');
   }
 
-  setLoading(true, `Building ${blocks.length} structures\u2026`);
+  setLoading(true, pickRandom(STATUS_PHASES.build), 'build');
   await nextFrame();
 
   if (ctx) ctx.dispose();
@@ -138,9 +198,19 @@ function resetToLanding() {
   disposeLight();
 }
 
-function setLoading(show: boolean, text?: string) {
+function setLoading(show: boolean, text?: string, phase?: string) {
   loadingOverlay.hidden = !show;
+  if (statusInterval) {
+    clearInterval(statusInterval);
+    statusInterval = null;
+  }
   if (text) loadingText.textContent = text;
+  if (show && phase && STATUS_PHASES[phase]) {
+    const pool = STATUS_PHASES[phase];
+    statusInterval = setInterval(() => {
+      loadingText.textContent = pickRandom(pool);
+    }, 3000);
+  }
 }
 
 function nextFrame(): Promise<void> {

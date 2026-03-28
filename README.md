@@ -2,7 +2,7 @@
 
 Render any website as a 3D cityscape. Enter a URL and Skyscraper fetches the page, screenshots it with html2canvas, walks the DOM tree to extract visible elements, and builds a Three.js scene where each element becomes a 3D block — deeper DOM nodes rise higher, creating a relief-map effect of the page's structure.
 
-Built by [johnkappa](https://johnkappa.com)
+**Live demo:** [skyscraper-six.vercel.app](https://skyscraper-six.vercel.app/)
 
 ## Features
 
@@ -67,3 +67,7 @@ Open `http://localhost:5174` and enter a URL.
 - Pages behind authentication or requiring JavaScript rendering (SPAs with no SSR) will not display correctly
 - Images hosted on servers that block proxy requests (e.g. Cloudflare-protected CDNs) may appear blank
 - Very large pages are capped at 3x viewport height to keep rendering manageable
+
+---
+
+Built by [johnkappa](https://johnkappa.com) · [GitHub](https://github.com/j-kappa/skyscraper)

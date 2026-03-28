@@ -228,12 +228,13 @@ html, body {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(9, 9, 11, 0.75);
+  background: rgba(24, 24, 27, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  padding: 4px 8px;
+  padding: 6px 10px;
   border-radius: 6px;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   font-size: 0.6875rem;
   font-family: var(--mono);
   z-index: 20;
@@ -245,14 +246,14 @@ html, body {
   justify-content: center;
   background: none;
   border: none;
-  color: var(--text-tertiary);
+  color: #d4d4d8;
   padding: 2px;
   cursor: pointer;
   transition: color 0.15s ease;
 }
 
 #back-btn:hover {
-  color: var(--text);
+  color: #ffffff;
 }
 
 #back-btn svg {
@@ -261,7 +262,7 @@ html, body {
 }
 
 #url-label {
-  color: var(--text-tertiary);
+  color: #d4d4d8;
   max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;

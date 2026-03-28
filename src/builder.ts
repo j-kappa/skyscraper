@@ -4,6 +4,8 @@ import type { ElementBlock } from './types';
 const SCALE = 0.1;
 const MAX_ELEVATION = 8;
 const MIN_HEIGHT = 0.08;
+const MEDIA_LIFT = 0.6;
+const MEDIA_TAGS = new Set(['IMG', 'VIDEO', 'CANVAS', 'PICTURE', 'SVG']);
 const SIDE_DARKEN = 0.65;
 const EDGE_OPACITY = 0.1;
 const RADIUS_SCALE = SCALE;
@@ -44,8 +46,10 @@ export function buildCity(
 
     const widthRatio = block.width / pageWidthPx;
     const dampen = 1 - widthRatio * 0.7;
+    const isMedia = MEDIA_TAGS.has(block.tagName);
     const elevation = Math.max(
-      (block.depth * depthScale + (block.hasBoundary ? boundaryLift : 0)) * dampen,
+      (block.depth * depthScale + (block.hasBoundary ? boundaryLift : 0)) * dampen
+        + (isMedia ? MEDIA_LIFT : 0),
       MIN_HEIGHT,
     );
 
@@ -72,7 +76,7 @@ export function buildCity(
       sideColor = (fallback ?? new THREE.Color(0.85, 0.85, 0.85)).multiplyScalar(SIDE_DARKEN);
     }
 
-    const depthBias = -block.depth * 0.5;
+    const depthBias = -(block.depth + (isMedia ? 10 : 0)) * 0.5;
     const topMat = new THREE.MeshBasicMaterial({
       map: topTexture,
       polygonOffset: true,
@@ -113,7 +117,7 @@ export function buildCity(
     );
     mesh.castShadow = block.hasBoundary;
     mesh.receiveShadow = true;
-    mesh.renderOrder = block.depth;
+    mesh.renderOrder = block.depth + (isMedia ? 100 : 0);
     group.add(mesh);
 
     if (block.hasBoundary && elevation > 0.5 && !hasRadius) {

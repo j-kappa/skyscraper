@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
-import { createSunLight, configureShadowFrustum, disposeSun } from './sun';
+import { createFixedLight, configureShadowFrustum, disposeLight } from './sun';
 
 export interface SceneContext {
   scene: THREE.Scene;
@@ -30,7 +30,7 @@ export function createScene(
   const sceneH = pageHeight * SCALE;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x111111);
+  scene.background = samplePageBackground(screenshot);
 
   const renderer = new THREE.WebGLRenderer({
     canvas,
@@ -71,10 +71,9 @@ export function createScene(
   const hemiLight = new THREE.HemisphereLight(0xffffff, 0xcccccc, 0.15);
   scene.add(hemiLight);
 
-  const sunLight = createSunLight();
+  const sunLight = createFixedLight(sceneW, sceneH);
   scene.add(sunLight);
   scene.add(sunLight.target);
-  sunLight.target.position.set(sceneW * 0.5, 0, sceneH * 0.5);
   configureShadowFrustum(sceneW, sceneH);
 
   // Ground plane = the full page screenshot
@@ -138,7 +137,7 @@ export function createScene(
     composer.dispose();
     renderer.dispose();
     groundTexture.dispose();
-    disposeSun();
+    disposeLight();
   }
 
   return {
@@ -153,4 +152,31 @@ export function createScene(
     requestRender,
     dispose,
   };
+}
+
+function samplePageBackground(screenshot: HTMLCanvasElement): THREE.Color {
+  const ctx = document.createElement('canvas').getContext('2d')!;
+  ctx.canvas.width = screenshot.width;
+  ctx.canvas.height = screenshot.height;
+  ctx.drawImage(screenshot, 0, 0);
+
+  let r = 0, g = 0, b = 0, n = 0;
+  const w = screenshot.width;
+  const h = screenshot.height;
+
+  const points = [
+    [2, 2], [w - 3, 2],
+    [2, h - 3], [w - 3, h - 3],
+    [Math.floor(w / 2), 2],
+    [2, Math.floor(h / 2)],
+    [w - 3, Math.floor(h / 2)],
+  ];
+
+  for (const [px, py] of points) {
+    const d = ctx.getImageData(px, py, 1, 1).data;
+    r += d[0]; g += d[1]; b += d[2];
+    n++;
+  }
+
+  return new THREE.Color(r / n / 255, g / n / 255, b / n / 255);
 }

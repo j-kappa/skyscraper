@@ -3,7 +3,7 @@ import { fetchHTML } from './fetcher';
 import { parseHTML } from './parser';
 import { createScene, type SceneContext } from './scene';
 import { buildCity } from './builder';
-import { getSunInfo, disposeSun } from './sun';
+import { disposeLight } from './sun';
 import * as THREE from 'three';
 
 const landing = document.getElementById('landing')!;
@@ -17,10 +17,7 @@ const loadingOverlay = document.getElementById('loading-overlay')!;
 const loadingText = document.getElementById('loading-text')!;
 const backBtn = document.getElementById('back-btn')!;
 const urlLabel = document.getElementById('url-label')!;
-const sunInfo = document.getElementById('sun-info')!;
-
 let ctx: SceneContext | null = null;
-let sunInterval: number | null = null;
 
 urlInput.addEventListener('focus', () => {
   if (urlInput.value.length > 0) urlInput.select();
@@ -88,13 +85,6 @@ async function loadSite(url: string) {
   buildCity(blocks, screenshot, ctx.buildingGroup, screenshotScale);
 
   urlLabel.textContent = url;
-  sunInfo.textContent = getSunInfo();
-
-  if (sunInterval) clearInterval(sunInterval);
-  sunInterval = window.setInterval(() => {
-    sunInfo.textContent = getSunInfo();
-  }, 30_000);
-
   animateCameraIn(ctx);
 
   await wait(800);
@@ -145,11 +135,7 @@ function resetToLanding() {
     ctx.dispose();
     ctx = null;
   }
-  if (sunInterval) {
-    clearInterval(sunInterval);
-    sunInterval = null;
-  }
-  disposeSun();
+  disposeLight();
 }
 
 function setLoading(show: boolean, text?: string) {

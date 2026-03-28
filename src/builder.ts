@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { ElementBlock } from './types';
 
 const SCALE = 0.1;
-const MAX_ELEVATION = 6;
+const MAX_ELEVATION = 8;
 const MIN_HEIGHT = 0.08;
 const SIDE_DARKEN = 0.65;
 const EDGE_OPACITY = 0.1;
@@ -38,19 +38,12 @@ export function buildCity(
   const pageWidthPx = pw / ss;
 
   for (const block of blocks) {
-    const inset = block.depth * 0.15;
-    const bx = block.x + inset;
-    const by = block.y + inset;
-    const bw = block.width - inset * 2;
-    const bh = block.height - inset * 2;
-    if (bw < 1 || bh < 1) continue;
-
-    const w3d = bw * SCALE;
-    const h3d = bh * SCALE;
+    const w3d = block.width * SCALE;
+    const h3d = block.height * SCALE;
     if (w3d < 0.04 || h3d < 0.04) continue;
 
     const widthRatio = block.width / pageWidthPx;
-    const dampen = 1 - widthRatio * 0.85;
+    const dampen = 1 - widthRatio * 0.7;
     const elevation = Math.max(
       (block.depth * depthScale + (block.hasBoundary ? boundaryLift : 0)) * dampen,
       MIN_HEIGHT,
@@ -79,11 +72,20 @@ export function buildCity(
       sideColor = (fallback ?? new THREE.Color(0.85, 0.85, 0.85)).multiplyScalar(SIDE_DARKEN);
     }
 
-    const topMat = new THREE.MeshBasicMaterial({ map: topTexture });
+    const depthBias = -block.depth * 0.5;
+    const topMat = new THREE.MeshBasicMaterial({
+      map: topTexture,
+      polygonOffset: true,
+      polygonOffsetFactor: depthBias,
+      polygonOffsetUnits: depthBias * 4,
+    });
     const sideMat = new THREE.MeshStandardMaterial({
       color: sideColor,
       roughness: 0.8,
       metalness: 0.02,
+      polygonOffset: true,
+      polygonOffsetFactor: depthBias,
+      polygonOffsetUnits: depthBias * 4,
     });
 
     const hasRadius = block.borderRadius > MIN_RADIUS_PX;
@@ -105,15 +107,16 @@ export function buildCity(
     }
 
     mesh.position.set(
-      bx * SCALE + w3d * 0.5,
+      block.x * SCALE + w3d * 0.5,
       elevation * 0.5,
-      by * SCALE + h3d * 0.5,
+      block.y * SCALE + h3d * 0.5,
     );
     mesh.castShadow = block.hasBoundary;
     mesh.receiveShadow = true;
+    mesh.renderOrder = block.depth;
     group.add(mesh);
 
-    if (block.hasBoundary && elevation > 1.0 && !hasRadius) {
+    if (block.hasBoundary && elevation > 0.5 && !hasRadius) {
       const edges = new THREE.EdgesGeometry(mesh.geometry, 60);
       const line = new THREE.LineSegments(edges, edgeMat);
       line.position.copy(mesh.position);

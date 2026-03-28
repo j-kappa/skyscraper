@@ -64,7 +64,7 @@ export function createScene(
   controls.maxDistance = viewHeight * 3;
   controls.update();
 
-  const ambient = new THREE.AmbientLight(0xffffff, 0.75);
+  const ambient = new THREE.AmbientLight(0xffffff, 0.7);
   scene.add(ambient);
 
   const hemiLight = new THREE.HemisphereLight(0xffffff, 0xcccccc, 0.05);
@@ -82,14 +82,31 @@ export function createScene(
   groundTexture.colorSpace = THREE.SRGBColorSpace;
 
   const groundGeo = new THREE.PlaneGeometry(sceneW, sceneH);
-  const groundMat = new THREE.MeshLambertMaterial({
+  const groundMat = new THREE.MeshBasicMaterial({
     map: groundTexture,
   });
   const ground = new THREE.Mesh(groundGeo, groundMat);
   ground.rotation.x = -Math.PI / 2;
-  ground.position.set(sceneW * 0.5, -0.01, sceneH * 0.5);
-  ground.receiveShadow = true;
+  ground.position.set(sceneW * 0.5, -0.05, sceneH * 0.5);
   scene.add(ground);
+
+  const floorPad = Math.max(sceneW, sceneH) * 0.5;
+  const floorW = sceneW + floorPad * 2;
+  const floorH = sceneH + floorPad * 2;
+  const bgColor = samplePageBackground(screenshot);
+  const floorGeo = new THREE.PlaneGeometry(floorW, floorH);
+  const floorMat = new THREE.MeshBasicMaterial({ color: bgColor });
+  const floor = new THREE.Mesh(floorGeo, floorMat);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.set(sceneW * 0.5, -0.06, sceneH * 0.5);
+  scene.add(floor);
+
+  const shadowMat = new THREE.ShadowMaterial({ opacity: 0.4 });
+  const shadowPlane = new THREE.Mesh(new THREE.PlaneGeometry(floorW, floorH), shadowMat);
+  shadowPlane.rotation.x = -Math.PI / 2;
+  shadowPlane.position.set(sceneW * 0.5, -0.04, sceneH * 0.5);
+  shadowPlane.receiveShadow = true;
+  scene.add(shadowPlane);
 
   const buildingGroup = new THREE.Group();
   scene.add(buildingGroup);

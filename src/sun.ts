@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 
 const SUN_DISTANCE = 500;
-const ALTITUDE = 0.4; // ~23° above horizon — long shadows
-const AZIMUTH = -0.8; // front-left
+const ALTITUDE = 0.26; // ~15° above horizon — long dramatic shadows
+const AZIMUTH = -0.7; // front-left
 
 let light: THREE.DirectionalLight | null = null;
 
@@ -10,16 +10,15 @@ export function createFixedLight(
   sceneW: number,
   sceneH: number,
 ): THREE.DirectionalLight {
-  const dir = new THREE.DirectionalLight(0xffffff, 0.2);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.5);
   dir.castShadow = true;
 
   dir.shadow.mapSize.width = 4096;
   dir.shadow.mapSize.height = 4096;
   dir.shadow.camera.near = 1;
   dir.shadow.camera.far = 2000;
-  dir.shadow.bias = -0.0003;
+  dir.shadow.bias = -0.0005;
   dir.shadow.normalBias = 0.02;
-  dir.shadow.radius = 6;
 
   const x = SUN_DISTANCE * Math.cos(ALTITUDE) * Math.sin(AZIMUTH);
   const y = SUN_DISTANCE * Math.sin(ALTITUDE);
@@ -38,7 +37,7 @@ export function createFixedLight(
 
 export function configureShadowFrustum(sceneWidth: number, sceneDepth: number) {
   if (!light) return;
-  const half = Math.max(sceneWidth, sceneDepth) * 0.6;
+  const half = Math.max(sceneWidth, sceneDepth) * 1.2;
   const cam = light.shadow.camera;
   cam.left = -half;
   cam.right = half;

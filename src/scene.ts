@@ -178,5 +178,7 @@ function samplePageBackground(screenshot: HTMLCanvasElement): THREE.Color {
     n++;
   }
 
-  return new THREE.Color(r / n / 255, g / n / 255, b / n / 255);
+  const color = new THREE.Color(r / n / 255, g / n / 255, b / n / 255);
+  color.convertSRGBToLinear();
+  return color;
 }

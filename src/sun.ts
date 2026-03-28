@@ -10,7 +10,7 @@ export function createFixedLight(
   sceneW: number,
   sceneH: number,
 ): THREE.DirectionalLight {
-  const dir = new THREE.DirectionalLight(0xffffff, 0.45);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.2);
   dir.castShadow = true;
 
   dir.shadow.mapSize.width = 4096;

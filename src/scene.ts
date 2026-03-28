@@ -64,10 +64,10 @@ export function createScene(
   controls.maxDistance = viewHeight * 3;
   controls.update();
 
-  const ambient = new THREE.AmbientLight(0xffffff, 0.45);
+  const ambient = new THREE.AmbientLight(0xffffff, 0.75);
   scene.add(ambient);
 
-  const hemiLight = new THREE.HemisphereLight(0xffffff, 0xcccccc, 0.1);
+  const hemiLight = new THREE.HemisphereLight(0xffffff, 0xcccccc, 0.05);
   scene.add(hemiLight);
 
   const sunLight = createFixedLight(sceneW, sceneH);

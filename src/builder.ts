@@ -77,7 +77,7 @@ export function buildCity(
     }
 
     const depthBias = -(block.depth + (isMedia ? 10 : 0)) * 0.5;
-    const topMat = new THREE.MeshLambertMaterial({
+    const topMat = new THREE.MeshBasicMaterial({
       map: topTexture,
       polygonOffset: true,
       polygonOffsetFactor: depthBias,

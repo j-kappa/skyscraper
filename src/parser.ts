@@ -40,6 +40,13 @@ export async function parseHTML(
   sourceUrl: string,
   onStatus?: (msg: string) => void,
 ): Promise<ParseResult> {
+  const origWarn = console.warn;
+  const origError = console.error;
+  const suppress = (...args: unknown[]) =>
+    typeof args[0] === 'string' && args[0].includes('unsupported color function');
+  console.warn = (...args: unknown[]) => { if (!suppress(...args)) origWarn.apply(console, args); };
+  console.error = (...args: unknown[]) => { if (!suppress(...args)) origError.apply(console, args); };
+
   onStatus?.('Rendering page\u2026');
 
   const iframe = document.createElement('iframe');
@@ -89,37 +96,28 @@ export async function parseHTML(
 
   await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
 
+  sanitizeInlineStyles(doc);
+
   onStatus?.('Capturing screenshot\u2026');
 
   const scrollH = doc.documentElement.scrollHeight;
   const pageWidth = VIEWPORT_W;
   const pageHeight = Math.min(scrollH, VIEWPORT_H * 3);
 
-  const origError = console.error;
-  console.error = (...args: unknown[]) => {
-    if (typeof args[0] === 'string' && args[0].includes('unsupported color function')) return;
-    origError.apply(console, args);
-  };
-
-  let screenshot: HTMLCanvasElement;
-  try {
-    screenshot = await html2canvas(doc.documentElement, {
-      width: pageWidth,
-      height: pageHeight,
-      windowWidth: VIEWPORT_W,
-      windowHeight: pageHeight,
-      scale: 2,
-      useCORS: true,
-      allowTaint: true,
-      logging: false,
-      backgroundColor: '#ffffff',
-      foreignObjectRendering: false,
-      imageTimeout: 15000,
-      removeContainer: true,
-    });
-  } finally {
-    console.error = origError;
-  }
+  const screenshot = await html2canvas(doc.documentElement, {
+    width: pageWidth,
+    height: pageHeight,
+    windowWidth: VIEWPORT_W,
+    windowHeight: pageHeight,
+    scale: 2,
+    useCORS: true,
+    allowTaint: true,
+    logging: false,
+    backgroundColor: '#ffffff',
+    foreignObjectRendering: false,
+    imageTimeout: 15000,
+    removeContainer: true,
+  });
 
   onStatus?.('Extracting elements\u2026');
 
@@ -131,6 +129,9 @@ export async function parseHTML(
   if (reduced.length > MAX_ELEMENTS) reduced.length = MAX_ELEMENTS;
 
   iframe.remove();
+
+  console.warn = origWarn;
+  console.error = origError;
 
   return { blocks: reduced, screenshot, pageWidth, pageHeight, screenshotScale: 2 };
 }
@@ -159,6 +160,7 @@ async function inlineAllStylesheets(doc: Document, baseUrl: string) {
         const resolved = resolveUrl(url, href!);
         return `url("${resolved}")`;
       });
+      cssText = sanitizeModernColors(cssText);
 
       const style = doc.createElement('style');
       style.textContent = cssText;
@@ -173,11 +175,31 @@ async function inlineAllStylesheets(doc: Document, baseUrl: string) {
   const styles = Array.from(doc.querySelectorAll('style'));
   for (const style of styles) {
     if (!style.textContent) continue;
-    style.textContent = style.textContent.replace(/url\(\s*['"]?([^'"()]+)['"]?\s*\)/gi, (match, url) => {
+    let css = style.textContent;
+    css = css.replace(/url\(\s*['"]?([^'"()]+)['"]?\s*\)/gi, (match, url) => {
       if (url.startsWith('data:')) return match;
       const resolved = resolveUrl(url, baseUrl);
       return `url("${resolved}")`;
     });
+    css = sanitizeModernColors(css);
+    style.textContent = css;
+  }
+}
+
+const MODERN_COLOR_RE = /(?:ok)?(?:lab|lch)\([^)]*\)/gi;
+
+function sanitizeModernColors(css: string): string {
+  return css.replace(MODERN_COLOR_RE, 'transparent');
+}
+
+function sanitizeInlineStyles(doc: Document) {
+  const els = doc.querySelectorAll('[style]');
+  for (const el of els) {
+    const raw = el.getAttribute('style');
+    if (raw && MODERN_COLOR_RE.test(raw)) {
+      MODERN_COLOR_RE.lastIndex = 0;
+      el.setAttribute('style', sanitizeModernColors(raw));
+    }
   }
 }
 

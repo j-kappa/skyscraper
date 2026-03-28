@@ -1,7 +1,7 @@
 import './styles.css';
 import { fetchHTML } from './fetcher';
 import { parseHTML } from './parser';
-import { createScene, type SceneContext } from './scene';
+import { createScene, CARD_TOP_Y, type SceneContext } from './scene';
 import { buildCity } from './builder';
 import { disposeLight } from './sun';
 import * as THREE from 'three';
@@ -142,7 +142,7 @@ async function loadSite(url: string) {
   if (ctx) ctx.dispose();
 
   ctx = createScene(canvas, pageWidth, pageHeight, screenshot);
-  buildCity(blocks, screenshot, ctx.buildingGroup, screenshotScale);
+  buildCity(blocks, screenshot, ctx.buildingGroup, screenshotScale, CARD_TOP_Y);
 
   urlLabel.textContent = url;
   animateCameraIn(ctx);
@@ -157,7 +157,7 @@ function animateCameraIn(sc: SceneContext) {
 
   const startPos = new THREE.Vector3(
     target.x,
-    finalPos.y + 60,
+    finalPos.y + 40,
     target.z,
   );
   sc.camera.position.copy(startPos);

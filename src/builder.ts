@@ -2,12 +2,11 @@ import * as THREE from 'three';
 import type { ElementBlock } from './types';
 
 const SCALE = 0.1;
-const MAX_ELEVATION = 8;
-const MIN_HEIGHT = 0.08;
-const MEDIA_LIFT = 0.6;
+const MAX_ELEVATION = 1.5;
+const MIN_HEIGHT = 0.05;
+const MEDIA_LIFT = 0.3;
 const MEDIA_TAGS = new Set(['IMG', 'VIDEO', 'CANVAS', 'PICTURE', 'SVG']);
 const SIDE_DARKEN = 0.65;
-const EDGE_OPACITY = 0.1;
 const RADIUS_SCALE = SCALE;
 const MIN_RADIUS_PX = 4;
 const CORNER_SEGMENTS = 5;
@@ -17,6 +16,7 @@ export function buildCity(
   screenshot: HTMLCanvasElement,
   group: THREE.Group,
   screenshotScale = 1,
+  cardTopY = 0,
 ) {
   clearGroup(group);
 
@@ -27,16 +27,9 @@ export function buildCity(
   const scratchCanvas = document.createElement('canvas');
   const scratchCtx = scratchCanvas.getContext('2d', { willReadFrequently: true })!;
 
-  const edgeMat = new THREE.LineBasicMaterial({
-    color: 0x000000,
-    transparent: true,
-    opacity: EDGE_OPACITY,
-    depthWrite: false,
-  });
-
   const maxDepth = blocks.reduce((m, b) => Math.max(m, b.depth), 1);
   const depthScale = MAX_ELEVATION / maxDepth;
-  const boundaryLift = 0.4;
+  const boundaryLift = 0.15;
   const pageWidthPx = pw / ss;
 
   for (const block of blocks) {
@@ -50,7 +43,7 @@ export function buildCity(
     const elevation = Math.max(
       (block.depth * depthScale + (block.hasBoundary ? boundaryLift : 0)) * dampen
         + (isMedia ? MEDIA_LIFT : 0),
-      block.hasBoundary ? 0.3 : MIN_HEIGHT,
+      block.hasBoundary ? 0.1 : MIN_HEIGHT,
     );
 
     const cropX = Math.round(block.x * ss);
@@ -112,21 +105,13 @@ export function buildCity(
 
     mesh.position.set(
       block.x * SCALE + w3d * 0.5,
-      elevation * 0.5,
+      cardTopY + elevation * 0.5,
       block.y * SCALE + h3d * 0.5,
     );
-    mesh.castShadow = elevation > 0.2;
+    mesh.castShadow = elevation > 0.1;
     mesh.receiveShadow = true;
     mesh.renderOrder = block.depth + (isMedia ? 100 : 0);
     group.add(mesh);
-
-    if (block.hasBoundary && elevation > 0.5 && !hasRadius) {
-      const edges = new THREE.EdgesGeometry(mesh.geometry, 60);
-      const line = new THREE.LineSegments(edges, edgeMat);
-      line.position.copy(mesh.position);
-      line.raycast = () => {};
-      group.add(line);
-    }
   }
 }
 

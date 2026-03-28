@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 const SUN_DISTANCE = 500;
-const ALTITUDE = 0.26; // ~15° above horizon — long dramatic shadows
+const ALTITUDE = 0.5; // ~29° above horizon — soft product-photo shadows
 const AZIMUTH = -0.7; // front-left
 
 let light: THREE.DirectionalLight | null = null;
@@ -10,7 +10,7 @@ export function createFixedLight(
   sceneW: number,
   sceneH: number,
 ): THREE.DirectionalLight {
-  const dir = new THREE.DirectionalLight(0xffffff, 0.5);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.35);
   dir.castShadow = true;
 
   dir.shadow.mapSize.width = 4096;
